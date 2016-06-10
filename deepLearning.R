@@ -25,14 +25,23 @@ product.model <- h2o.deeplearning(x = 1:93,  # column numbers for predictors
                    hidden = c(30,50,30), # three layers of 50 nodes
                    epochs = 50) # max. no. of epochs
 
+# test predictions
+product.h2o.test <- as.h2o(product.test)
+product.predict.train <- h2o.predict(product.model, product.h2o.train)
+product.predict.test <- h2o.predict(product.model, product.h2o.test)
 
 # confusion matix
 h2o.confusionMatrix(product.model, product.h2o.train)
 h2o.confusionMatrix(product.model, product.h2o.test)
 
-# predictions
-product.h2o.test <- as.h2o(product.test)
-product.predict.train <- h2o.predict(product.model, product.h2o.train)
-product.predict.test <- h2o.predict(product.model, product.h2o.test)
+# unlabeled data
+submission <- read.csv("input/test.csv")
+submission.input <- submission[, 2:94] # exclude ID column
+submission.h2o <- as.h2o(submission.input)
+submission.predict <- h2o.predict(product.model, submission.h2o)
+submission.output <- as.data.frame( submission.predict)
+submission.assigned <- as.data.frame(t( apply(submission.output[,-1], 1, prediction)))
+names(submission.assigned)<-names(submission.output)[-1]
+
 
 h2o.shutdown(prompt = F)
